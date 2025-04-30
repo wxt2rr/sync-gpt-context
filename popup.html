@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>AI Chat Context Sync</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      width: 300px;
+      padding: 15px;
+    }
+    h1 {
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .language-selector {
+      font-size: 12px;
+      padding: 3px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    button {
+      flex: 1;
+      padding: 8px;
+      background-color: #0078d7;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005a9e;
+    }
+    #deleteAllContexts {
+      background-color: #d9534f;
+      font-size: 12px;
+      padding: 4px 8px;
+      margin-left: auto;
+    }
+    #deleteAllContexts:hover {
+      background-color: #c9302c;
+    }
+    .contexts-list {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+    }
+    .context-item {
+      padding: 8px;
+      margin-bottom: 8px;
+      background-color: #f5f5f5;
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+    }
+    .context-item:hover {
+      background-color: #e5e5e5;
+    }
+    .delete-btn {
+      position: absolute;
+      right: 5px;
+      top: 5px;
+      background-color: #ff4d4d;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 10px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .platform-tag {
+      display: inline-block;
+      padding: 2px 6px;
+      font-size: 10px;
+      border-radius: 10px;
+      margin-right: 5px;
+      color: white;
+      transition: transform 0.2s;
+      position: relative;
+    }
+    .platform-tag:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .platform-tag::after {
+      content: "?";
+      font-size: 8px;
+      position: absolute;
+      top: -3px;
+      right: -3px;
+      background-color: rgba(255,255,255,0.8);
+      color: #333;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tag-chatgpt {
+      background-color: #656c6a;
+    }
+    .tag-claude {
+      background-color: #f18c18;
+    }
+    .tag-gemini {
+      background-color: #4285f4;
+    }
+    .tag-grok {
+      background-color: #020202;
+    }
+    .tag-deepseek {
+      background-color: #0771f1;
+    }
+    .tag-tongyi {
+      background-color: #6147f1;
+    }
+    .tag-doubao {
+      background-color: #6fa5e7;
+    }
+    .status-message {
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 4px;
+      text-align: center;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    .context-preview {
+      position: absolute;
+      width: 300px;
+      max-height: 90vh;
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      overflow-y: auto;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    .context-preview.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+    .preview-close {
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .preview-platform-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      padding: 10px;
+      background-color: #f5f5f5;
+      border-radius: 8px;
+    }
+    .platform-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      margin-right: 10px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    .platform-icon.chatgpt {
+      background-image: url('https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg');
+      background-color: #656c6a;
+    }
+    .platform-icon.claude {
+      background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/4f/Claude_icon.png');
+      background-color: #f18c18;
+    }
+    .platform-icon.gemini {
+      background-image: url('https://storage.googleapis.com/gweb-uniblog-publish-prod/images/gemini_icon_30_on_light.max-400x400.png');
+      background-color: #4285f4;
+    }
+    .platform-icon.grok {
+      background-image: url('https://grok.x.ai/favicon.ico');
+      background-color: #020202;
+    }
+    .platform-icon.deepseek {
+      background-image: url('https://www.deepseek.com/favicon.svg');
+      background-color: #0771f1;
+    }
+    .platform-icon.tongyi {
+      background-color: #6147f1;
+    }
+    .platform-icon.doubao {
+      background-color: #6fa5e7;
+    }
+    .message-stats {
+      margin: 10px 0;
+      padding: 5px 10px;
+      background-color: #f0f7ff;
+      border-radius: 4px;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-around;
+    }
+    .message {
+      margin-bottom: 10px;
+      padding: 8px;
+      border-radius: 4px;
+    }
+    .messages-container {
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+    .message.user {
+      background-color: #f0f7ff;
+      border-left: 3px solid #0078d7;
+    }
+    .message.assistant {
+      background-color: #f7f7f7;
+      border-left: 3px solid #6c757d;
+    }
+    .message.system {
+      background-color: #fff8e1;
+      border-left: 3px solid #ffc107;
+    }
+    .secondary-actions {
+      display: flex; 
+      justify-content: flex-end; 
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 id="title">AI Chat Context Sync</h1>
+    <select id="languageSelector" class="language-selector">
+      <option value="en">English</option>
+      <option value="zh">中文</option>
+    </select>
+  </div>
+  
+  <div class="action-buttons">
+    <button id="saveContext">Save Current Context</button>
+    <button id="restoreContext">Restore Selected Context</button>
+  </div>
+  
+  <div class="secondary-actions">
+    <button id="deleteAllContexts">Delete All</button>
+  </div>
+  
+  <div id="statusMessage" class="status-message" style="display: none;"></div>
+  
+  <h2 id="subtitle" style="font-size: 14px;">Saved Contexts</h2>
+  <div id="contextsList" class="contexts-list">
+    <!-- Context items will be dynamically added here -->
+    <div class="context-item" style="text-align: center; color: #666;">
+      No saved contexts yet
+    </div>
+  </div>
+  
+  <!-- Context preview panel (hidden by default) -->
+  <div id="contextPreview" class="context-preview">
+    <div class="preview-header">
+      <h3 id="previewTitle">Context Details</h3>
+      <span class="preview-close" id="previewClose">×</span>
+    </div>
+    <div id="previewContent"></div>
+  </div>
+  
+  <script src="popup.js" type="module"></script>
+</body>
+</html> 

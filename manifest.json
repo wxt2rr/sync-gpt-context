@@ -1,0 +1,59 @@
+{
+  "manifest_version": 3,
+  "name": "AI Chat Context Sync",
+  "version": "1.0",
+  "description": "Save and restore chat contexts between different AI platforms",
+  "permissions": ["storage", "activeTab", "scripting", "tabs"],
+  "host_permissions": [
+    "https://chat.openai.com/*",
+    "https://chatgpt.com/*",
+    "https://claude.ai/*",
+    "https://gemini.google.com/*",
+    "https://bard.google.com/*",
+    "https://grok.x.ai/*",
+    "https://x.ai/grok/*",
+    "https://chat.deepseek.com/*",
+    "https://www.tongyi.com/*",
+    "https://tongyi.aliyun.com/*",
+    "https://qianwen.aliyun.com/*",
+    "https://www.doubao.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "images/icon16.png",
+      "48": "images/icon48.png",
+      "128": "images/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chat.openai.com/*",
+        "https://chatgpt.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*",
+        "https://bard.google.com/*",
+        "https://grok.x.ai/*",
+        "https://x.ai/grok/*",
+        "https://chat.deepseek.com/*",
+        "https://www.tongyi.com/*",
+        "https://tongyi.aliyun.com/*",
+        "https://qianwen.aliyun.com/*",
+        "https://www.doubao.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["platforms/*.js", "platforms/registry-export.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+} 
